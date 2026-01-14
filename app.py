@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import datetime
+import os
 
 # ======================
 # Configuration page
@@ -22,19 +23,51 @@ st.markdown(
 st.subheader("🚨 Suivi des accidents de travail")
 
 # ======================
-# Dernier accident OFFICIEL
-# ======================
-last_accident_date = datetime.date(2026, 1, 9)
-last_accident_desc = (
-    "Lors de l’opération de pesage, un élément est tombé et a heurté "
-    "le genou droit de l’opératrice, entraînant une blessure."
-)
-
-# ======================
-# Dates
+# Dates utiles
 # ======================
 today = datetime.date.today()
 yesterday = today - datetime.timedelta(days=1)
+
+# ======================
+# 🔎 Lecture du dernier accident depuis Excel
+# ======================
+@st.cache_data
+def read_last_accident_from_excel():
+    file_path = "incident.xlsx"
+
+    if not os.path.exists(file_path):
+        st.error("❌ Fichier inciden.xlsx introuvable")
+        st.stop()
+
+    df_excel = pd.read_excel(file_path, header=None)
+    df_excel = df_excel.dropna(how="all")
+
+    if df_excel.empty:
+        st.error("❌ Le fichier inciden.xlsx est vide")
+        st.stop()
+
+    last_row = df_excel.iloc[-1]
+
+    day = int(last_row[0])    # Colonne A
+    month = int(last_row[1])  # Colonne B
+    year = int(last_row[2])   # Colonne C
+
+    last_date = datetime.date(year, month, day)
+
+    if last_date > yesterday:
+        st.error("❌ La date du dernier accident est dans le futur")
+        st.stop()
+
+    return last_date
+
+last_accident_date = read_last_accident_from_excel()
+
+# ======================
+# Description accident
+# ======================
+last_accident_desc = (
+    "Dernier accident enregistré automatiquement depuis le fichier Excel."
+)
 
 # ======================
 # Création calendrier annuel
@@ -54,7 +87,7 @@ df = create_calendar()
 df = df[df["Date"] <= pd.Timestamp(yesterday)]
 
 # ======================
-# ⛔ Enregistrer l'accident du 12/01/2026
+# ⛔ Marquer le dernier accident dans le calendrier
 # ======================
 df.loc[df["Date"] == pd.Timestamp(last_accident_date), "Accident"] = True
 
