@@ -1,32 +1,31 @@
 import streamlit as st
 import pandas as pd
+import os
 
-# Titre de l'application
-st.title("📊 Lecture et affichage d'un fichier Excel")
+# Titre
+st.title("📊 Affichage du fichier incident.xlsx")
 
-# Upload du fichier Excel
-uploaded_file = st.file_uploader(
-    "📂 Choisir un fichier Excel",
-    type=["xlsx", "xls"]
-)
+# Nom du fichier Excel (dans le même dossier)
+FILE_NAME = "incident.xlsx"
 
-if uploaded_file is not None:
+# Vérifier si le fichier existe
+if os.path.exists(FILE_NAME):
     try:
         # Lecture du fichier Excel
-        df = pd.read_excel(uploaded_file)
+        df = pd.read_excel(FILE_NAME)
 
-        st.success("✅ Fichier chargé avec succès")
+        st.success("✅ Fichier incident.xlsx chargé avec succès")
 
         # Affichage du tableau
         st.subheader("📋 Contenu du fichier Excel")
-        st.dataframe(df)
+        st.dataframe(df, use_container_width=True)
 
-        # Informations supplémentaires
+        # Infos
         st.subheader("ℹ️ Informations")
-        st.write(f"Nombre de lignes : {df.shape[0]}")
-        st.write(f"Nombre de colonnes : {df.shape[1]}")
+        st.write("Nombre de lignes :", df.shape[0])
+        st.write("Nombre de colonnes :", df.shape[1])
 
     except Exception as e:
         st.error(f"❌ Erreur lors de la lecture du fichier : {e}")
 else:
-    st.info("⬆️ Veuillez importer un fichier Excel")
+    st.error("❌ Le fichier incident.xlsx est introuvable dans le dossier")
