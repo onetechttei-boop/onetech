@@ -33,7 +33,7 @@ yesterday = today - datetime.timedelta(days=1)
 # ======================
 @st.cache_data
 def read_last_accident_from_excel():
-    file_path = "inciden.xlsx"
+    file_path = "incident.xlsx"
 
     if not os.path.exists(file_path):
         st.error("❌ Fichier inciden.xlsx introuvable")
