@@ -1,14 +1,15 @@
-
 import streamlit as st
 import pandas as pd
 import datetime
 
 # ======================
-# Initialisation
+# Configuration page
 # ======================
 st.set_page_config(page_title="SafeYear 2026", layout="wide")
 
-# TITRE COLORÉ EN HAUT
+# ======================
+# Titre ONETECH
+# ======================
 st.markdown(
     """
     <h1 style='text-align: center;'>
@@ -18,11 +19,10 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Sous-titre
-st.subheader("🚨 Suivi des accidents")
+st.subheader("🚨 Suivi des accidents de travail")
 
 # ======================
-# Dernier accident connu
+# Dernier accident OFFICIEL
 # ======================
 last_accident_date = datetime.date(2026, 1, 12)
 last_accident_desc = (
@@ -31,13 +31,13 @@ last_accident_desc = (
 )
 
 # ======================
-# Dates utiles
+# Dates
 # ======================
 today = datetime.date.today()
 yesterday = today - datetime.timedelta(days=1)
 
 # ======================
-# Création du calendrier
+# Création calendrier annuel
 # ======================
 @st.cache_data
 def create_calendar():
@@ -54,7 +54,12 @@ df = create_calendar()
 df = df[df["Date"] <= pd.Timestamp(yesterday)]
 
 # ======================
-# Ajout accident (Sidebar)
+# ⛔ Enregistrer l'accident du 12/01/2026
+# ======================
+df.loc[df["Date"] == pd.Timestamp(last_accident_date), "Accident"] = True
+
+# ======================
+# Sidebar – ajout manuel d'accident
 # ======================
 st.sidebar.header("📌 Enregistrer un accident")
 
@@ -69,29 +74,31 @@ if st.sidebar.button("Ajouter accident"):
     st.sidebar.success(f"Accident ajouté pour {date_accident}")
 
 # ======================
-# Calcul jours sans accident depuis 1er janvier
+# Calcul jours consécutifs sans accident
 # ======================
 def calculate_lta_days(df):
     count = 0
     values = []
+
     for accident in df["Accident"]:
-        if not accident:
-            count += 1
-        else:
+        if accident:
             count = 0
+        else:
+            count += 1
         values.append(count)
+
     df["JoursSansAccident"] = values
     return df
 
 df = calculate_lta_days(df)
 
 # ======================
-# ✅ CALCUL CORRECT : jours depuis le dernier accident jusqu'à hier
+# Calcul jours depuis dernier accident
 # ======================
 days_since_last_accident = (yesterday - last_accident_date).days
 
 # ======================
-# Affichage Dernier accident
+# Affichage dernier accident
 # ======================
 st.markdown(
     f"""
@@ -107,7 +114,7 @@ st.markdown(
 )
 
 # ======================
-# 📊 STATISTIQUES GLOBALES
+# Statistiques globales
 # ======================
 st.subheader("📊 Statistiques globales (du 1er janvier jusqu'à hier)")
 
@@ -117,24 +124,16 @@ total_accidents = df["Accident"].sum()
 col1, col2 = st.columns(2)
 
 with col1:
-    st.metric("Jours sans accident depuis le 1er janvier", total_days_without_accident)
+    st.metric(
+        "Jours sans accident depuis le dernier accident",
+        total_days_without_accident
+    )
 
 with col2:
-    st.metric("Total d'accidents enregistrés", total_accidents)
-
-# ======================
-# Nombre de jours sans accident depuis le dernier accident
-# ======================
-st.markdown(
-    f"""
-    <div style='text-align: center; margin-top: 10px;'>
-        <p style='font-size:18px; font-weight:bold;'>
-            Nombre de jours sans accident depuis le dernier accident : {days_since_last_accident}
-        </p>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+    st.metric(
+        "Total d'accidents enregistrés",
+        total_accidents
+    )
 
 st.divider()
 
