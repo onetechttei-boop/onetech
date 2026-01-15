@@ -4,38 +4,22 @@ from firebase_admin import credentials, db
 import threading
 import time
 
-# ======================
-# Initialisation Firebase
-# ======================
+# Firebase
 cred = credentials.Certificate("ttei-a1956-firebase-adminsdk-fbsvc-92f346cb8c.json")
-
 firebase_admin.initialize_app(cred, {
     'databaseURL': 'https://ttei-a1956-default-rtdb.europe-west1.firebasedatabase.app/'
 })
-
-# Référence à la racine ou à un chemin spécifique
 ref = db.reference('/')
 
-# ======================
-# Variables Streamlit
-# ======================
+# Streamlit
 st.set_page_config(page_title="Boutons en temps réel", layout="wide")
 st.title("État des boutons en temps réel")
-
-# Zone où on affichera le dernier bouton appuyé
 bouton_display = st.empty()
 
-# ======================
-# Fonction listener Firebase
-# ======================
+# Listener Firebase
 def firebase_listener(event):
-    """
-    Cette fonction sera appelée à chaque changement dans Firebase
-    """
     if event.data is None:
         return
-
-    # Exemple : si tu as /bouton1 ou /bouton2 dans Firebase
     if 'bouton1' in str(event.path):
         bouton_display.markdown("### 🔵 Bouton 1 appuyé")
     elif 'bouton2' in str(event.path):
@@ -43,8 +27,13 @@ def firebase_listener(event):
     else:
         bouton_display.markdown(f"### {event.data}")
 
-# ======================
 # Thread pour écouter Firebase
-# ======================
 def listen_firebase():
-    ref.listen(firebase_listen_
+    ref.listen(firebase_listener)  # <-- Parenthèse fermée ici !
+
+listener_thread = threading.Thread(target=listen_firebase, daemon=True)
+listener_thread.start()
+
+# Boucle principale pour garder Streamlit actif
+while True:
+    time.sleep(1)
