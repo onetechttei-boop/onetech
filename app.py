@@ -87,7 +87,7 @@ def calculate_lta_days(df):
 df = calculate_lta_days(df)
 
 # ======================
-# DERNIER ACCIDENT (CORRIGÉ)
+# DERNIER ACCIDENT
 # ======================
 if not accidents_df.empty and accidents_df["date"].notna().any():
     last_accident_ts = accidents_df["date"].dropna().max()
@@ -156,18 +156,19 @@ if st.sidebar.button("Connexion"):
         st.sidebar.error("Mot de passe incorrect ❌")
 
 # ======================
-# AJOUT ACCIDENT (ADMIN)
+# AJOUT ET SUPPRESSION D’ACCIDENT (ADMIN)
 # ======================
 if st.session_state.admin_logged:
     st.sidebar.divider()
-    st.sidebar.header("📌 Ajouter un accident")
+    st.sidebar.header("📌 Gestion des accidents")
 
+    # -- AJOUT --
+    st.sidebar.subheader("Ajouter un accident")
     new_date = st.sidebar.date_input(
         "Date de l'accident",
         min_value=datetime.date(2026, 1, 1),
         max_value=yesterday
     )
-
     new_desc = st.sidebar.text_area("Description de l'accident")
 
     if st.sidebar.button("Enregistrer l'accident"):
@@ -175,12 +176,29 @@ if st.session_state.admin_logged:
             "date": pd.to_datetime(new_date),
             "description": new_desc
         }])
-
         accidents_df = pd.concat([accidents_df, new_row], ignore_index=True)
         accidents_df.to_csv(ACCIDENT_FILE, index=False)
-
         st.sidebar.success("Accident enregistré 💾")
         st.rerun()
+
+    st.sidebar.divider()
+    
+    # -- SUPPRESSION --
+    st.sidebar.subheader("Supprimer un accident")
+    if not accidents_df.empty:
+        # Liste des accidents existants pour sélectionner
+        options = accidents_df.apply(
+            lambda x: f"{x['date'].date()} - {x['description']}", axis=1
+        ).tolist()
+        to_delete = st.sidebar.selectbox("Choisir un accident à supprimer", options)
+
+        if st.sidebar.button("Supprimer l'accident"):
+            # Trouver l’index et supprimer
+            index = options.index(to_delete)
+            accidents_df = accidents_df.drop(index)
+            accidents_df.to_csv(ACCIDENT_FILE, index=False)
+            st.sidebar.success("Accident supprimé ✅")
+            st.rerun()
 
 # ======================
 # CALENDRIER
