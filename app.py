@@ -9,7 +9,7 @@ import os
 st.set_page_config(page_title="SafeYear 2026", layout="wide")
 
 ADMIN_PASSWORD = "onetech2026"
-ACCIDENT_FILE = "accidents.csv"
+ACCIDENT_FILE = "accidentss.csv"
 
 # ======================
 # SESSION
