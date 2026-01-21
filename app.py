@@ -20,15 +20,7 @@ if "admin_logged" not in st.session_state:
 # ======================
 # TITRE
 # ======================
-st.markdown(
-    """
-    <h1 style="text-align:center;">
-        <span style="color:blue;">ONE</span><span style="color:orange;">TECH</span>
-    </h1>
-    """,
-    unsafe_allow_html=True
-)
-
+st.title("🔵 ONE🟠TECH")
 st.subheader("🚨 Suivi des accidents - SafeYear 2026")
 
 # ======================
@@ -72,19 +64,17 @@ for _, row in accidents_df.iterrows():
 # ======================
 # CALCUL JOURS SANS ACCIDENT
 # ======================
-def calculate_lta_days(df):
-    count = 0
-    values = []
-    for acc in df["Accident"]:
-        if acc:
-            count = 0
-        else:
-            count += 1
-        values.append(count)
-    df["JoursSansAccident"] = values
-    return df
+count = 0
+jours_sans_accident = []
 
-df = calculate_lta_days(df)
+for acc in df["Accident"]:
+    if acc:
+        count = 0
+    else:
+        count += 1
+    jours_sans_accident.append(count)
+
+df["JoursSansAccident"] = jours_sans_accident
 
 # ======================
 # DERNIER ACCIDENT
@@ -92,6 +82,7 @@ df = calculate_lta_days(df)
 if not accidents_df.empty and accidents_df["date"].notna().any():
     last_accident_ts = accidents_df["date"].dropna().max()
     last_accident_date = last_accident_ts.date()
+    last_accident_text = last_accident_date.strftime("%d/%m/%Y")
 
     last_desc = accidents_df.loc[
         accidents_df["date"] == last_accident_ts,
@@ -99,34 +90,20 @@ if not accidents_df.empty and accidents_df["date"].notna().any():
     ].values[0]
 
     days_since = (yesterday - last_accident_date).days
-    last_accident_text = last_accident_date.strftime("%d/%m/%Y")
 else:
+    last_accident_text = "—"
     last_desc = "Aucun accident enregistré"
     days_since = df["JoursSansAccident"].iloc[-1]
-    last_accident_text = "—"
 
 # ======================
-# AFFICHAGE DERNIER ACCIDENT (HTML CORRECT)
+# AFFICHAGE DERNIER ACCIDENT (SIMPLE)
 # ======================
-html = f"""
-<div style="text-align:center; margin-bottom:25px;">
-    <h3>Dernier accident</h3>
+st.subheader("Dernier accident")
+st.caption(f"📅 Date : {last_accident_text}")
+st.metric("Jours sans accident", days_since)
+st.write(f"📝 {last_desc}")
 
-    <div style="font-size:17px; color:gray; margin-bottom:5px;">
-        📅 Date : {last_accident_text}
-    </div>
-
-    <h2 style="margin-top:10px;">
-        {days_since} jours sans accident
-    </h2>
-
-    <div style="color: lightcoral; font-size:18px;">
-        📝 {last_desc}
-    </div>
-</div>
-"""
-
-st.markdown(html, unsafe_allow_html=True)
+st.divider()
 
 # ======================
 # STATISTIQUES
@@ -177,9 +154,9 @@ if st.session_state.admin_logged:
         min_value=datetime.date(2026, 1, 1),
         max_value=yesterday
     )
-    new_desc = st.sidebar.text_area("Description de l'accident")
+    new_desc = st.sidebar.text_area("Description")
 
-    if st.sidebar.button("Enregistrer l'accident"):
+    if st.sidebar.button("Enregistrer"):
         new_row = pd.DataFrame([{
             "date": pd.to_datetime(new_date),
             "description": new_desc
@@ -193,14 +170,15 @@ if st.session_state.admin_logged:
 
     # SUPPRESSION
     st.sidebar.subheader("Supprimer un accident")
+
     if not accidents_df.empty:
         options = accidents_df.apply(
             lambda x: f"{x['date'].date()} - {x['description']}", axis=1
         ).tolist()
 
-        to_delete = st.sidebar.selectbox("Choisir un accident", options)
+        to_delete = st.sidebar.selectbox("Choisir", options)
 
-        if st.sidebar.button("Supprimer l'accident"):
+        if st.sidebar.button("Supprimer"):
             index = options.index(to_delete)
             accidents_df = accidents_df.drop(index)
             accidents_df.to_csv(ACCIDENT_FILE, index=False)
@@ -212,18 +190,14 @@ if st.session_state.admin_logged:
 # ======================
 st.subheader("📅 Calendrier")
 
-months = df["Date"].dt.month.unique()
-
-for m in months:
-    month_df = df[df["Date"].dt.month == m]
+for month in df["Date"].dt.month.unique():
+    month_df = df[df["Date"].dt.month == month]
     month_name = month_df["Date"].dt.strftime("%B %Y").iloc[0]
 
     st.markdown(f"### {month_name}")
 
-    table = pd.DataFrame({
+    st.table(pd.DataFrame({
         "Jour": month_df["Date"].dt.day,
         "Accident": month_df["Accident"].map(lambda x: "🔴" if x else "🟢"),
-        "Jours consécutifs sans accident": month_df["JoursSansAccident"]
-    })
-
-    st.table(table)
+        "Jours sans accident": month_df["JoursSansAccident"]
+    }))
