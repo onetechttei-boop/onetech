@@ -22,8 +22,8 @@ if "admin_logged" not in st.session_state:
 # ======================
 st.markdown(
     """
-    <h1 style='text-align: center;'>
-        <span style='color: blue;'>ONE</span><span style='color: orange;'>TECH</span>
+    <h1 style="text-align:center;">
+        <span style="color:blue;">ONE</span><span style="color:orange;">TECH</span>
     </h1>
     """,
     unsafe_allow_html=True
@@ -106,26 +106,27 @@ else:
     last_accident_text = "—"
 
 # ======================
-# AFFICHAGE DERNIER ACCIDENT
+# AFFICHAGE DERNIER ACCIDENT (HTML CORRECT)
 # ======================
-st.markdown(
-    f"""
-    <div style='text-align:center; margin-bottom:25px;'>
-        <h3>Dernier accident</h3>
+html = f"""
+<div style="text-align:center; margin-bottom:25px;">
+    <h3>Dernier accident</h3>
 
-        <p style='font-size:17px; color:gray;'>
-            📅 Date : {last_accident_text}
-        </p>
-
-        <h2 style='margin-top:10px;'>{days_since} jours sans accident</h2>
-
-        <p style='color: lightcoral; font-size:18px;'>
-            📝 {last_desc}
-        </p>
+    <div style="font-size:17px; color:gray; margin-bottom:5px;">
+        📅 Date : {last_accident_text}
     </div>
-    """,
-    unsafe_allow_html=True
-)
+
+    <h2 style="margin-top:10px;">
+        {days_since} jours sans accident
+    </h2>
+
+    <div style="color: lightcoral; font-size:18px;">
+        📝 {last_desc}
+    </div>
+</div>
+"""
+
+st.markdown(html, unsafe_allow_html=True)
 
 # ======================
 # STATISTIQUES
@@ -163,7 +164,7 @@ if st.sidebar.button("Connexion"):
         st.sidebar.error("Mot de passe incorrect ❌")
 
 # ======================
-# GESTION ACCIDENTS
+# GESTION DES ACCIDENTS
 # ======================
 if st.session_state.admin_logged:
     st.sidebar.divider()
@@ -197,7 +198,7 @@ if st.session_state.admin_logged:
             lambda x: f"{x['date'].date()} - {x['description']}", axis=1
         ).tolist()
 
-        to_delete = st.sidebar.selectbox("Choisir un accident à supprimer", options)
+        to_delete = st.sidebar.selectbox("Choisir un accident", options)
 
         if st.sidebar.button("Supprimer l'accident"):
             index = options.index(to_delete)
