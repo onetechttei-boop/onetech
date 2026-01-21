@@ -51,7 +51,7 @@ df = create_calendar()
 df = df[df["Date"] <= pd.Timestamp(yesterday)]
 
 # ======================
-# CHARGER ACCIDENTS (ROBUSTE)
+# CHARGER ACCIDENTS
 # ======================
 def load_accidents():
     if os.path.exists(ACCIDENT_FILE):
@@ -63,7 +63,7 @@ def load_accidents():
 accidents_df = load_accidents()
 
 # ======================
-# APPLIQUER ACCIDENTS AU CALENDRIER
+# APPLIQUER ACCIDENTS
 # ======================
 for _, row in accidents_df.iterrows():
     if pd.notna(row["date"]):
@@ -99,10 +99,12 @@ if not accidents_df.empty and accidents_df["date"].notna().any():
     ].values[0]
 
     days_since = (yesterday - last_accident_date).days
+    last_accident_text = last_accident_date.strftime("%d/%m/%Y")
 else:
     last_accident_date = None
     last_desc = "Aucun accident enregistré"
     days_since = df["JoursSansAccident"].iloc[-1]
+    last_accident_text = "—"
 
 # ======================
 # AFFICHAGE DERNIER ACCIDENT
@@ -112,8 +114,11 @@ st.markdown(
     <div style='text-align:center; margin-bottom:20px;'>
         <h3>Dernier accident</h3>
         <h2>{days_since} jours sans accident</h2>
+        <p style='font-size:18px;'>
+            📅 <strong>Date :</strong> {last_accident_text}
+        </p>
         <p style='color: lightcoral; font-size:18px;'>
-            {last_desc}
+            📝 {last_desc}
         </p>
     </div>
     """,
@@ -156,13 +161,13 @@ if st.sidebar.button("Connexion"):
         st.sidebar.error("Mot de passe incorrect ❌")
 
 # ======================
-# AJOUT ET SUPPRESSION D’ACCIDENT (ADMIN)
+# GESTION ACCIDENTS (ADMIN)
 # ======================
 if st.session_state.admin_logged:
     st.sidebar.divider()
     st.sidebar.header("📌 Gestion des accidents")
 
-    # -- AJOUT --
+    # AJOUT
     st.sidebar.subheader("Ajouter un accident")
     new_date = st.sidebar.date_input(
         "Date de l'accident",
@@ -182,18 +187,17 @@ if st.session_state.admin_logged:
         st.rerun()
 
     st.sidebar.divider()
-    
-    # -- SUPPRESSION --
+
+    # SUPPRESSION
     st.sidebar.subheader("Supprimer un accident")
     if not accidents_df.empty:
-        # Liste des accidents existants pour sélectionner
         options = accidents_df.apply(
             lambda x: f"{x['date'].date()} - {x['description']}", axis=1
         ).tolist()
+
         to_delete = st.sidebar.selectbox("Choisir un accident à supprimer", options)
 
         if st.sidebar.button("Supprimer l'accident"):
-            # Trouver l’index et supprimer
             index = options.index(to_delete)
             accidents_df = accidents_df.drop(index)
             accidents_df.to_csv(ACCIDENT_FILE, index=False)
