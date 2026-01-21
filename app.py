@@ -101,7 +101,6 @@ if not accidents_df.empty and accidents_df["date"].notna().any():
     days_since = (yesterday - last_accident_date).days
     last_accident_text = last_accident_date.strftime("%d/%m/%Y")
 else:
-    last_accident_date = None
     last_desc = "Aucun accident enregistré"
     days_since = df["JoursSansAccident"].iloc[-1]
     last_accident_text = "—"
@@ -111,12 +110,15 @@ else:
 # ======================
 st.markdown(
     f"""
-    <div style='text-align:center; margin-bottom:20px;'>
+    <div style='text-align:center; margin-bottom:25px;'>
         <h3>Dernier accident</h3>
-        <h2>{days_since} jours sans accident</h2>
-        <p style='font-size:18px;'>
-            📅 <strong>Date :</strong> {last_accident_text}
+
+        <p style='font-size:17px; color:gray;'>
+            📅 Date : {last_accident_text}
         </p>
+
+        <h2 style='margin-top:10px;'>{days_since} jours sans accident</h2>
+
         <p style='color: lightcoral; font-size:18px;'>
             📝 {last_desc}
         </p>
@@ -161,7 +163,7 @@ if st.sidebar.button("Connexion"):
         st.sidebar.error("Mot de passe incorrect ❌")
 
 # ======================
-# GESTION ACCIDENTS (ADMIN)
+# GESTION ACCIDENTS
 # ======================
 if st.session_state.admin_logged:
     st.sidebar.divider()
